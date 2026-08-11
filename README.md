@@ -13,6 +13,26 @@ The project uses transfer learning and a Siamese ResNet18 architecture with shar
 - Major Damage
 - Destroyed
 
+## Live Demo
+
+**Web Application:**  
+https://disasterdiff-production.up.railway.app/
+
+**Interactive API Do## Live Demo
+
+**Web Application:**  
+https://disasterdiff-production.up.railway.app/
+
+**Interactive API Documentation:**  
+https://disasterdiff-production.up.railway.app/docs
+
+**Health Check:**  
+https://disasterdiff-production.up.railway.app/healthcumentation:**  
+https://disasterdiff-production.up.railway.app/docs
+
+**Health Check:**  
+https://disasterdiff-production.up.railway.app/health
+
 ## Dataset
 
 The project uses the xBD / xView2 disaster damage dataset.
@@ -42,6 +62,40 @@ Training is performed in two stages:
 
 1. Freeze the pretrained backbone and train the classifier.
 2. Unfreeze the final ResNet block (`layer4`) and fine-tune it using a smaller learning rate.
+
+## Model Results
+
+| Model | Test Accuracy | Macro Precision | Macro Recall | Macro F1 |
+|---|---:|---:|---:|---:|
+| Post-only ResNet18 | 80.94% | 62.14% | 75.78% | 66.76% |
+| Siamese ResNet18 | 78.49% | 65.84% | 75.84% | **67.77%** |
+
+Although the post-only ResNet18 baseline achieved higher overall test accuracy,
+the Siamese ResNet18 achieved better Macro Precision and the best Macro F1 score.
+
+Because the dataset is highly class-imbalanced, Macro F1 was selected as the
+primary evaluation metric. Unlike overall accuracy, Macro F1 gives equal
+importance to all four damage classes.
+
+### Final Siamese Test Performance
+
+- **Test Accuracy:** 78.49%
+- **Macro Precision:** 65.84%
+- **Macro Recall:** 75.84%
+- **Macro F1:** 67.77%
+
+### Per-Class Performance
+
+| Damage Class | Precision | Recall | F1 Score |
+|---|---:|---:|---:|
+| No Damage | 98.12% | 79.79% | 88.01% |
+| Minor Damage | 33.00% | 81.41% | 46.96% |
+| Major Damage | 69.07% | 62.59% | 65.67% |
+| Destroyed | 63.16% | 79.58% | 70.42% |
+
+The model performs particularly well at identifying no-damage and destroyed
+buildings. Minor damage remains the most challenging class, with high recall
+but lower precision.
 
 ## Evaluation
 
