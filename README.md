@@ -1,47 +1,59 @@
-# DisasterDiff
+# 🛰️ DisasterDiff
 
 ## Explainable Building Damage Assessment Using Pre- and Post-Disaster Satellite Imagery
 
-**DisasterDiff** is a deep learning system for assessing building damage severity by comparing satellite imagery captured **before and after a disaster**.
+**DisasterDiff** is an end-to-end deep learning system that predicts building damage severity by comparing satellite imagery captured **before and after a disaster**.
 
-The project uses transfer learning with a **Siamese ResNet18 architecture with shared weights** to learn temporal changes between paired building images.
+The project uses **transfer learning**, a **Siamese ResNet18 with shared weights**, class-imbalance handling, Grad-CAM explainability, a FastAPI inference backend, a web interface, Docker, and Railway deployment.
 
 ---
 
-## Live Demo
+## 🌐 Live Demo
 
-🌐 **Web Application:**  
+**Web Application:**  
 https://disasterdiff-production.up.railway.app/
 
-📚 **Interactive API Documentation:**  
+**Interactive API Documentation:**  
 https://disasterdiff-production.up.railway.app/docs
 
-❤️ **Health Check:**  
+**Health Check:**  
 https://disasterdiff-production.up.railway.app/health
 
 ---
 
-## Damage Classes
+## 🎯 Problem Statement
 
-The model predicts one of four damage levels:
+After natural disasters, rapidly estimating building-level damage can help prioritize rescue, inspection, and recovery efforts.
 
-- No Damage
-- Minor Damage
-- Major Damage
-- Destroyed
+A post-disaster image alone may not always reveal what changed.
+
+DisasterDiff therefore compares:
+
+- a **pre-disaster image**
+- a **post-disaster image**
+
+of the same building and predicts one of four damage levels.
+
+### Damage Classes
+
+1. No Damage
+2. Minor Damage
+3. Major Damage
+4. Destroyed
 
 ---
 
-## Dataset
+# 📊 Dataset
 
-The project uses the **xBD / xView2 disaster damage dataset**, containing pre- and post-disaster satellite imagery from multiple disaster events.
+The project uses the **xBD / xView2 Building Damage Assessment dataset** containing pre- and post-disaster satellite imagery from multiple disaster events.
 
 After preprocessing:
 
-- **158,213** valid building image pairs were extracted
-- **10** disaster events were represented
-- Images were cropped around individual buildings
-- Pre- and post-disaster images use the same spatial crop
+- **158,213 valid building pairs**
+- **10 disaster events**
+- **2,240 source tiles**
+- matched pre/post spatial crops
+- individual building-level samples
 
 ### Class Distribution
 
@@ -52,70 +64,101 @@ After preprocessing:
 | Major Damage | 14,086 |
 | Destroyed | 12,980 |
 
-The dataset is strongly class-imbalanced, so class-weighted loss and Macro F1 evaluation were used.
+The dataset is strongly imbalanced, with the majority of buildings belonging to the **No Damage** class.
 
 ---
 
-## Leakage-Safe Data Splitting
+# 🔒 Leakage-Safe Data Splitting
 
-To avoid data leakage, train, validation, and test splits were created at the **source-tile level** rather than randomly splitting individual building crops.
+Randomly splitting individual building crops can cause spatial leakage because multiple buildings may come from the same satellite tile.
 
-| Split | Samples |
-|---|---:|
-| Train | 106,637 |
-| Validation | 25,598 |
-| Test | 25,978 |
+To prevent this, splitting was performed using the **source tile ID as the grouping variable**.
 
-No source tile appears in more than one split.
+| Split | Samples | Source Tiles |
+|---|---:|---:|
+| Train | 106,637 | 1,568 |
+| Validation | 25,598 | 336 |
+| Test | 25,978 | 336 |
+
+There is **no source-tile overlap** between train, validation, and test sets.
 
 ---
 
-## Data Preprocessing
+# 🧹 Data Preprocessing
 
 The preprocessing pipeline includes:
 
-- Parsing xBD JSON annotations
-- Filtering unclassified buildings
-- Extracting matched pre/post building crops
-- Square crop generation with contextual padding
-- Minimum crop-size enforcement
-- Resize to `224 × 224`
+- parsing xBD JSON annotations
+- extracting building polygons
+- removing unclassified buildings
+- filtering extremely small buildings
+- generating square crops around each building
+- adding surrounding contextual padding
+- using the same crop for pre- and post-disaster imagery
+- resizing images to `224 × 224`
 - ImageNet normalization
-- Random horizontal flips
-- Random vertical flips
-- Small random rotations
+- random horizontal flips
+- random vertical flips
+- small random rotations
 
-For paired training, the **same spatial augmentation is applied to both images**.
-
----
-
-## Models
-
-### Baseline — Post-only ResNet18
-
-The baseline model uses a pretrained ResNet18 and only the **post-disaster image**.
-
-This establishes whether paired temporal information actually improves performance.
-
-### Proposed Model — Siamese ResNet18
-
-The final model processes both the pre- and post-disaster images using a **shared ResNet18 backbone**.
-
-The extracted features are combined using:
-
-- Before-image features
-- After-image features
-- Absolute feature difference
-- Element-wise feature interaction
-
-The fused representation is passed through a classification head to predict the four damage classes.
+For Siamese training, the **same geometric augmentation is applied to both images** so their spatial correspondence is preserved.
 
 ---
 
-## Model Architecture
+# 🧠 Models
+
+## 1. Baseline — Post-only ResNet18
+
+The baseline uses a pretrained **ResNet18** and only the post-disaster image.
+
+This answers an important question:
+
+> Does comparing pre- and post-disaster imagery provide useful information beyond using the post-disaster image alone?
+
+---
+
+## 2. Proposed Model — Siamese ResNet18
+
+The final architecture uses a **shared ResNet18 backbone** for both images.
+
+The same encoder processes:
+
+- the before image
+- the after image
+
+producing two comparable feature vectors.
+
+The classifier then combines:
+
+- before-image features
+- after-image features
+- absolute feature difference
+- element-wise feature product
+
+Conceptually:
+
+```text
+Before Image ──► Shared ResNet18 ──► Before Features ─┐
+                                                     │
+After Image  ──► Shared ResNet18 ──► After Features ─┤
+                                                     │
+                         |Before - After| ────────────┤
+                                                     │
+                         Before × After ──────────────┤
+                                                     ▼
+                                               Classifier
+                                                     │
+                                                     ▼
+                                         Damage Severity
+```
+
+---
+
+# 🏗️ Model Architecture
 
 ```mermaid
 flowchart LR
+
     A[Before Disaster Image] --> C[Shared ResNet18]
     B[After Disaster Image] --> C
 
@@ -140,36 +183,42 @@ flowchart LR
 
 ---
 
-## Training Strategy
+# ⚙️ Training Strategy
 
-Training was performed in two stages.
+Training was performed in multiple transfer-learning stages.
 
-### Stage 1 — Classifier Training
+## Stage 1 — Train the Classification Head
 
-- Pretrained ResNet18 backbone frozen
-- Classification head trained
-- Weighted cross-entropy loss used
-
-### Stage 2 — Fine-Tuning
-
-- Final ResNet block (`layer4`) unfrozen
-- Smaller learning rate used for the backbone
-- Higher learning rate retained for the classifier
+- pretrained ResNet18 backbone frozen
+- classifier trained
+- weighted cross-entropy loss
 - AdamW optimizer
-- Learning-rate scheduling
-- Early stopping based on validation Macro F1
 
-A final low-learning-rate fine-tuning phase improved the validation Macro F1 to:
+## Stage 2 — Fine-Tune High-Level Features
+
+- `layer4` of ResNet18 unfrozen
+- smaller learning rate for backbone
+- larger learning rate for classifier
+- learning-rate reduction on plateau
+- early stopping based on validation Macro F1
+
+## Low-Learning-Rate Fine-Tuning
+
+A final short fine-tuning phase using reduced learning rates improved validation performance.
+
+### Best Validation Macro F1
 
 **0.7187**
 
 ---
 
-## Handling Class Imbalance
+# ⚖️ Handling Class Imbalance
 
-The training set is dominated by the no-damage class.
+Because most samples belong to the No Damage class, ordinary cross-entropy could encourage the model to over-predict the majority class.
 
-Weighted cross-entropy was therefore used with approximately:
+Weighted cross-entropy was therefore used.
+
+Approximate training weights:
 
 | Class | Weight |
 |---|---:|
@@ -178,24 +227,34 @@ Weighted cross-entropy was therefore used with approximately:
 | Major Damage | 2.7901 |
 | Destroyed | 2.5317 |
 
-This encourages the model to pay more attention to minority damage classes.
+This gives minority damage classes greater influence during training.
 
 ---
 
-## Model Results
+# 📈 Model Results
+
+## Baseline vs Siamese
 
 | Model | Test Accuracy | Macro Precision | Macro Recall | Macro F1 |
 |---|---:|---:|---:|---:|
 | Post-only ResNet18 | **80.94%** | 62.14% | 75.78% | 66.76% |
 | Siamese ResNet18 | 78.49% | **65.84%** | **75.84%** | **67.77%** |
 
-Although the post-only ResNet18 achieves higher overall accuracy, the Siamese model achieves the **best Macro F1 and Macro Precision**.
+The post-only model achieves higher overall accuracy.
 
-Because the dataset is highly class-imbalanced, **Macro F1 was selected as the primary evaluation metric**, as it gives equal importance to all four classes.
+However, the Siamese model obtains:
+
+- higher **Macro Precision**
+- higher **Macro Recall**
+- higher **Macro F1**
+
+Because the dataset is highly imbalanced, **Macro F1 was selected as the primary evaluation metric**.
+
+Macro F1 gives equal importance to all damage classes instead of allowing the dominant No Damage class to dominate the score.
 
 ---
 
-## Final Siamese Test Performance
+# 📋 Final Siamese Test Performance
 
 - **Test Accuracy:** 78.49%
 - **Macro Precision:** 65.84%
@@ -211,130 +270,116 @@ Because the dataset is highly class-imbalanced, **Macro F1 was selected as the p
 | Major Damage | 69.07% | 62.59% | 65.67% |
 | Destroyed | 63.16% | 79.58% | 70.42% |
 
-The model performs particularly well on **no-damage** and **destroyed** buildings.
+### Observation
 
-Minor damage remains the most challenging class: the model achieves high recall but comparatively low precision, indicating that some samples from neighboring damage levels are predicted as minor damage.
+The most difficult class is **Minor Damage**.
 
----
+It achieves high recall but comparatively low precision, indicating confusion between visually neighboring levels of damage severity.
 
-## Evaluation Metrics
-
-### Primary Metric
-
-- Macro F1 Score
-
-### Additional Metrics
-
-- Accuracy
-- Macro Precision
-- Macro Recall
-- Per-class Precision
-- Per-class Recall
-- Per-class F1
-- Confusion Matrix
-- Normalized Confusion Matrix
+This is expected because the boundaries between minor and major structural damage can be subtle in satellite imagery.
 
 ---
 
-## Explainability with Grad-CAM
+# 🔍 Explainability with Grad-CAM
 
-Grad-CAM is used on the final convolutional block of the shared ResNet18 backbone to visualize which spatial regions contribute to the model's decision.
+Grad-CAM was applied to the final convolutional block of the shared ResNet18 backbone.
 
-Because the architecture processes paired imagery, Grad-CAM can be generated for both:
+Because the model processes both pre- and post-disaster images, separate activation maps can be produced for each branch.
 
-- Pre-disaster image
-- Post-disaster image
+This helps inspect whether the model is attending to relevant buildings and disaster-induced changes.
 
-This helps inspect whether the network is focusing on meaningful building regions and disaster-induced visual changes.
+## Major Damage Example
 
-If the Grad-CAM images are present in `reports/figures/`, add:
+[![Major Damage Grad-CAM](reports/figures/gradcam_major-damage.png)](reports/figures/gradcam_major-damage.png)
 
-```markdown
-### Major Damage Example
+## Destroyed Example
 
-![Major Damage Grad-CAM](reports/figures/gradcam_major-damage.png)
+[![Destroyed Grad-CAM](reports/figures/gradcam_destroyed.png)](reports/figures/gradcam_destroyed.png)
 
-### Destroyed Example
-
-![Destroyed Grad-CAM](reports/figures/gradcam_destroyed.png)
-```
+In the destroyed example, strong post-disaster attention is concentrated around the region where the original structure has disappeared.
 
 ---
 
-## FastAPI Backend
+# 🌐 Web Application
 
-The trained model is integrated into a **FastAPI REST API**.
+The frontend provides a simple interface where users can:
 
-### Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/` | Web application |
-| GET | `/health` | Model/API health check |
-| GET | `/docs` | Interactive Swagger documentation |
-| POST | `/predict` | Damage prediction |
-
-The `/predict` endpoint accepts:
-
-- `before_image`
-- `after_image`
-
-and returns:
-
-- Predicted damage class
-- Confidence score
-- Probability for every damage class
-
-Example response:
-
-```json
-{
-    "prediction": "destroyed",
-    "confidence": 0.927,
-    "probabilities": {
-        "no-damage": 0.001,
-        "minor-damage": 0.003,
-        "major-damage": 0.070,
-        "destroyed": 0.927
-    }
-}
-```
-
----
-
-## Web Application
-
-The frontend allows users to:
-
-1. Upload a pre-disaster image
-2. Upload the corresponding post-disaster image
-3. Run damage analysis
-4. View the predicted damage class
-5. View confidence and class probabilities
+1. upload a pre-disaster satellite crop
+2. upload the corresponding post-disaster crop
+3. run damage analysis
+4. view the predicted damage class
+5. view model confidence
+6. inspect probabilities for all four classes
 
 The frontend communicates directly with the FastAPI backend.
 
 ---
 
-## Deployment
+# ⚡ FastAPI Backend
+
+The trained Siamese model is served using **FastAPI**.
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/` | DisasterDiff web application |
+| GET | `/ui` | Frontend |
+| GET | `/health` | API/model health check |
+| GET | `/docs` | Swagger API documentation |
+| POST | `/predict` | Predict building damage |
+
+---
+
+## Prediction Request
+
+`POST /predict`
+
+The endpoint accepts:
+
+```text
+before_image
+after_image
+```
+
+as multipart image files.
+
+### Example Response
+
+```json
+{
+  "prediction": "destroyed",
+  "confidence": 0.927,
+  "probabilities": {
+    "no-damage": 0.001,
+    "minor-damage": 0.003,
+    "major-damage": 0.070,
+    "destroyed": 0.927
+  }
+}
+```
+
+---
+
+# 🐳 Deployment
 
 The complete application is containerized using **Docker** and deployed on **Railway**.
 
-Deployment includes:
+The production container includes:
 
 - FastAPI backend
-- Siamese ResNet18 checkpoint
-- Static frontend
-- CPU-based PyTorch inference
-- Public HTTPS endpoint
+- static frontend
+- final Siamese ResNet18 checkpoint
+- CPU-only PyTorch inference
+- Uvicorn server
 
-Live application:
+### Production Application
 
 https://disasterdiff-production.up.railway.app/
 
 ---
 
-## Project Structure
+# 📁 Project Structure
 
 ```text
 DisasterDiff/
@@ -363,7 +408,11 @@ DisasterDiff/
 ├── src/
 │   ├── data/
 │   ├── models/
+│   │   ├── baseline.py
+│   │   └── test_baseline.py
+│   │
 │   └── training/
+│       └── compute_class_weights.py
 │
 ├── Dockerfile
 ├── requirements.txt
@@ -375,9 +424,62 @@ DisasterDiff/
 
 ---
 
-## Tech Stack
+# 💻 Local Setup
 
-### Deep Learning
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/KhushiAgarwal0406/DisasterDiff.git
+cd DisasterDiff
+```
+
+## 2. Create a virtual environment
+
+```bash
+python -m venv venv
+```
+
+### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+### Linux / macOS
+
+```bash
+source venv/bin/activate
+```
+
+## 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+## 4. Start FastAPI
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000
+```
+
+Swagger documentation:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+# 🛠️ Tech Stack
+
+## Deep Learning
 
 - PyTorch
 - Torchvision
@@ -386,26 +488,27 @@ DisasterDiff/
 - Siamese Neural Networks
 - Grad-CAM
 
-### Data & Evaluation
+## Data Processing & Evaluation
 
 - Pandas
 - NumPy
 - Scikit-learn
-- Matplotlib
 - Pillow
+- Matplotlib
 
-### Backend
+## Backend
 
 - FastAPI
 - Uvicorn
+- Pydantic
 
-### Frontend
+## Frontend
 
 - HTML
 - CSS
 - JavaScript
 
-### Deployment
+## Deployment
 
 - Docker
 - Railway
@@ -413,19 +516,53 @@ DisasterDiff/
 
 ---
 
-## Key Project Takeaways
+# 💡 Key Learnings
 
-- Temporal comparison between pre- and post-disaster imagery can improve balanced classification performance.
-- Overall accuracy alone can be misleading for strongly imbalanced datasets.
-- Group-based splitting is important for avoiding spatial leakage in satellite imagery.
-- Weighted loss significantly improves sensitivity to minority damage classes.
-- Grad-CAM provides a useful mechanism for inspecting spatial attention.
-- The complete deep learning model can be served through a production-style REST API and web application.
+This project demonstrates several practical machine learning lessons:
+
+- paired temporal imagery can provide useful information beyond post-disaster imagery alone
+- overall accuracy is not always appropriate for imbalanced classification
+- Macro F1 provides a better view of performance across damage classes
+- spatial/group leakage must be considered when splitting satellite datasets
+- class-weighted loss improves minority-class sensitivity
+- transfer learning enables effective training with pretrained CNN backbones
+- Grad-CAM helps inspect what image regions influence predictions
+- trained deep learning models can be integrated into production-style REST APIs
+- Docker provides reproducible inference environments
+- Railway allows the complete ML application to be publicly deployed
 
 ---
 
-## Disclaimer
+# ⚠️ Limitations
 
-DisasterDiff is a research prototype designed for educational and experimental purposes.
+- Minor and Major Damage can be visually difficult to distinguish.
+- Satellite image quality differs between disaster events.
+- Class imbalance remains significant.
+- Predictions depend on matched crops of the same building.
+- The system performs classification on already-cropped buildings rather than detecting buildings from full satellite scenes.
+- Confidence scores should not be interpreted as structural engineering certainty.
 
-Its predictions should **not** be used as a substitute for official disaster assessment or on-site structural inspection.
+---
+
+# 🚀 Possible Future Improvements
+
+Future versions could explore:
+
+- stronger backbones such as EfficientNet or ConvNeXt
+- vision transformers
+- focal loss
+- disaster-aware domain adaptation
+- better probability calibration
+- automatic building localization
+- segmentation-based damage assessment
+- larger hyperparameter searches
+- uncertainty estimation
+- interactive Grad-CAM visualization in the frontend
+
+---
+
+# ⚠️ Disclaimer
+
+DisasterDiff is a research and educational prototype.
+
+Predictions should **not** be used as a substitute for official disaster assessment, engineering inspection, or emergency-response decisions.
