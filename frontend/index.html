@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="DisasterDiff - AI-powered building damage assessment from pre- and post-disaster satellite imagery."
+    >
+
+    <title>
+        DisasterDiff | Building Damage Assessment
+    </title>
+
+    <!-- v=3 prevents browser from using old cached CSS -->
+    <link
+        rel="stylesheet"
+        href="/static/styles.css?v=3"
+    >
+</head>
+
+
+<body>
+
+    <div class="page-shell">
+
+        <!-- Ambient background glow -->
+        <div class="ambient ambient-a"></div>
+        <div class="ambient ambient-b"></div>
+
+
+        <!-- ============================
+             NAVBAR
+        ============================= -->
+
+        <header class="topbar">
+
+            <a
+                class="brand"
+                href="/"
+            >
+
+                <div class="brand-mark">
+                    DD
+                </div>
+
+                <div>
+
+                    <div class="brand-name">
+                        DisasterDiff
+                    </div>
+
+                    <div class="brand-tag">
+                        Satellite Damage Intelligence
+                    </div>
+
+                </div>
+
+            </a>
+
+
+            <div class="topbar-actions">
+
+                <div
+                    class="api-status"
+                    id="apiStatus"
+                >
+
+                    <span class="status-dot"></span>
+
+                    <span id="apiStatusText">
+                        Checking API
+                    </span>
+
+                </div>
+
+
+                <a
+                    class="ghost-link"
+                    href="/docs"
+                    target="_blank"
+                >
+                    API Docs
+                </a>
+
+            </div>
+
+        </header>
+
+
+
+        <main>
+
+
+            <!-- ============================
+                 HERO
+            ============================= -->
+
+            <section class="hero">
+
+                <div class="eyebrow">
+
+                    <span class="eyebrow-dot"></span>
+
+                    Explainable deep learning for disaster response
+
+                </div>
+
+
+                <h1>
+
+                    Compare
+                    <span>before</span>
+                    and
+                    <span>after</span>.
+
+                    <br>
+
+                    Understand building damage faster.
+
+                </h1>
+
+
+                <p class="hero-copy">
+
+                    Upload paired satellite crops of the same building.
+                    DisasterDiff uses a Siamese ResNet18 to estimate
+                    damage severity across four classes.
+
+                </p>
+
+
+                <div class="hero-meta">
+
+                    <div class="meta-chip">
+                        Siamese ResNet18
+                    </div>
+
+                    <div class="meta-chip">
+                        4 damage classes
+                    </div>
+
+                    <div class="meta-chip">
+                        Macro-F1 optimized
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- ============================
+                 UPLOAD WORKSPACE
+            ============================= -->
+
+            <section class="workspace-card">
+
+
+                <div class="workspace-heading">
+
+                    <div>
+
+                        <p class="section-kicker">
+                            ASSESSMENT WORKSPACE
+                        </p>
+
+                        <h2>
+                            Upload a matched image pair
+                        </h2>
+
+                        <p>
+                            Use crops of the same building captured
+                            before and after the disaster.
+                        </p>
+
+                    </div>
+
+
+                    <div class="pair-badge">
+                        Matched pair
+                    </div>
+
+                </div>
+
+
+
+                <div class="upload-grid">
+
+
+                    <!-- BEFORE IMAGE -->
+
+                    <article class="upload-panel">
+
+                        <div class="panel-label-row">
+
+                            <span class="step-number">
+                                01
+                            </span>
+
+                            <div>
+
+                                <h3>
+                                    Before disaster
+                                </h3>
+
+                                <p>
+                                    Pre-event satellite crop
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <label
+                            class="dropzone"
+                            id="beforeDropzone"
+                            for="beforeImage"
+                        >
+
+                            <input
+                                id="beforeImage"
+                                type="file"
+                                accept="image/jpeg,image/png,image/jpg"
+                                hidden
+                            >
+
+
+                            <div
+                                class="dropzone-empty"
+                                id="beforeEmpty"
+                            >
+
+                                <div class="upload-icon">
+                                    ↑
+                                </div>
+
+                                <strong>
+                                    Drop image here
+                                </strong>
+
+                                <span>
+                                    or click to browse · JPG / PNG
+                                </span>
+
+                            </div>
+
+
+                            <div
+                                class="preview-wrap"
+                                id="beforePreviewWrap"
+                                hidden
+                            >
+
+                                <img
+                                    id="beforePreview"
+                                    alt="Before disaster image"
+                                >
+
+                                <div class="preview-overlay">
+
+                                    <span id="beforeFilename"></span>
+
+                                    <button
+                                        type="button"
+                                        class="replace-button"
+                                        data-target="beforeImage"
+                                    >
+                                        Replace
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </label>
+
+                    </article>
+
+
+
+                    <!-- AFTER IMAGE -->
+
+                    <article class="upload-panel">
+
+                        <div class="panel-label-row">
+
+                            <span class="step-number">
+                                02
+                            </span>
+
+                            <div>
+
+                                <h3>
+                                    After disaster
+                                </h3>
+
+                                <p>
+                                    Post-event satellite crop
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <label
+                            class="dropzone"
+                            id="afterDropzone"
+                            for="afterImage"
+                        >
+
+                            <input
+                                id="afterImage"
+                                type="file"
+                                accept="image/jpeg,image/png,image/jpg"
+                                hidden
+                            >
+
+
+                            <div
+                                class="dropzone-empty"
+                                id="afterEmpty"
+                            >
+
+                                <div class="upload-icon">
+                                    ↑
+                                </div>
+
+                                <strong>
+                                    Drop image here
+                                </strong>
+
+                                <span>
+                                    or click to browse · JPG / PNG
+                                </span>
+
+                            </div>
+
+
+                            <div
+                                class="preview-wrap"
+                                id="afterPreviewWrap"
+                                hidden
+                            >
+
+                                <img
+                                    id="afterPreview"
+                                    alt="After disaster image"
+                                >
+
+                                <div class="preview-overlay">
+
+                                    <span id="afterFilename"></span>
+
+                                    <button
+                                        type="button"
+                                        class="replace-button"
+                                        data-target="afterImage"
+                                    >
+                                        Replace
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </label>
+
+                    </article>
+
+                </div>
+
+
+
+                <!-- ACTION BUTTON -->
+
+                <div class="action-row">
+
+                    <div class="input-hint">
+
+                        Best results come from aligned crops
+                        of the same building.
+
+                    </div>
+
+
+                    <button
+                        class="primary-button"
+                        id="predictButton"
+                        type="button"
+                        disabled
+                    >
+
+                        <span id="buttonText">
+                            Analyze damage
+                        </span>
+
+                        <span
+                            id="buttonArrow"
+                            class="button-arrow"
+                        >
+                            →
+                        </span>
+
+                        <span
+                            class="spinner"
+                            id="spinner"
+                            hidden
+                        >
+                        </span>
+
+                    </button>
+
+                </div>
+
+
+
+                <!-- ============================
+                     ERROR BOX
+
+                     IMPORTANT:
+                     starts with is-hidden
+                ============================= -->
+
+                <div
+                    class="error-banner is-hidden"
+                    id="errorBanner"
+                >
+
+                    <div>
+
+                        <strong>
+                            Assessment failed
+                        </strong>
+
+                        <span id="errorText">
+                            Something went wrong.
+                        </span>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        id="dismissError"
+                    >
+                        Dismiss
+                    </button>
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- ============================
+                 RESULT SECTION
+            ============================= -->
+
+            <section
+                class="result-card"
+                id="resultCard"
+                hidden
+            >
+
+
+                <div class="result-summary">
+
+
+                    <div>
+
+                        <p class="section-kicker">
+                            MODEL OUTPUT
+                        </p>
+
+
+                        <div class="result-title-row">
+
+                            <h2>
+                                Damage assessment
+                            </h2>
+
+                            <span
+                                class="severity-badge"
+                                id="severityBadge"
+                            >
+                                No damage
+                            </span>
+
+                        </div>
+
+
+                        <p class="result-subtitle">
+
+                            Prediction generated from the paired
+                            pre/post satellite observations.
+
+                        </p>
+
+                    </div>
+
+
+
+                    <div
+                        class="confidence-ring"
+                        id="confidenceRing"
+                        style="--score: 0;"
+                    >
+
+                        <div class="confidence-inner">
+
+                            <strong id="confidenceValue">
+                                0%
+                            </strong>
+
+                            <span>
+                                confidence
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="result-grid">
+
+
+                    <!-- Probability panel -->
+
+                    <div class="probability-panel">
+
+                        <div class="panel-heading">
+
+                            <h3>
+                                Class probabilities
+                            </h3>
+
+                            <span>
+                                Softmax output
+                            </span>
+
+                        </div>
+
+
+                        <div
+                            id="probabilityList"
+                            class="probability-list"
+                        >
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Explanation panel -->
+
+                    <div class="interpretation-panel">
+
+
+                        <div class="panel-heading">
+
+                            <h3>
+                                Assessment note
+                            </h3>
+
+                            <span>
+                                Decision support
+                            </span>
+
+                        </div>
+
+
+                        <div
+                            class="assessment-note"
+                            id="assessmentNote"
+                        >
+                        </div>
+
+
+                        <div class="model-note">
+
+                            <div class="model-note-icon">
+                                AI
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Siamese feature comparison
+                                </strong>
+
+                                <p>
+                                    Before, after, absolute-difference
+                                    and interaction features are fused
+                                    for classification.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+
+            <!-- ============================
+                 PIPELINE
+            ============================= -->
+
+            <section class="how-it-works">
+
+
+                <div class="section-header">
+
+                    <p class="section-kicker">
+                        PIPELINE
+                    </p>
+
+                    <h2>
+                        How DisasterDiff works
+                    </h2>
+
+                </div>
+
+
+
+                <div class="pipeline-grid">
+
+
+                    <article>
+
+                        <span>
+                            01
+                        </span>
+
+                        <h3>
+                            Pair
+                        </h3>
+
+                        <p>
+                            Provide matched pre- and post-disaster
+                            building crops.
+                        </p>
+
+                    </article>
+
+
+                    <article>
+
+                        <span>
+                            02
+                        </span>
+
+                        <h3>
+                            Encode
+                        </h3>
+
+                        <p>
+                            A shared ResNet18 extracts comparable
+                            visual representations.
+                        </p>
+
+                    </article>
+
+
+                    <article>
+
+                        <span>
+                            03
+                        </span>
+
+                        <h3>
+                            Compare
+                        </h3>
+
+                        <p>
+                            The network combines temporal features,
+                            differences and interactions.
+                        </p>
+
+                    </article>
+
+
+                    <article>
+
+                        <span>
+                            04
+                        </span>
+
+                        <h3>
+                            Assess
+                        </h3>
+
+                        <p>
+                            The classifier returns damage severity
+                            and class probabilities.
+                        </p>
+
+                    </article>
+
+
+                </div>
+
+            </section>
+
+
+        </main>
+
+
+
+        <!-- ============================
+             FOOTER
+        ============================= -->
+
+        <footer>
+
+            <div>
+
+                <strong>
+                    DisasterDiff
+                </strong>
+
+                <span>
+                    Deep learning for building-level disaster assessment.
+                </span>
+
+            </div>
+
+
+            <span>
+                Research prototype · Not a substitute for field inspection
+            </span>
+
+        </footer>
+
+
+    </div>
+
+
+    <!-- v=3 prevents browser from using old cached JavaScript -->
+    <script src="/static/app.js?v=3"></script>
+
+</body>
+
+</html>

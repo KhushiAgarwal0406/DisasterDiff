@@ -1,3 +1,5 @@
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi import (
     FastAPI,
     File,
@@ -23,15 +25,24 @@ app = FastAPI(
 
     version="1.0.0"
 )
+app.mount(
+    "/static",
+    StaticFiles(directory="frontend"),
+    name="static"
+)
 
 
 @app.get("/")
 def root():
+    return FileResponse(
+        "frontend/index.html"
+    )
 
-    return {
-        "message":
-            "DisasterDiff API is running"
-    }
+@app.get("/ui")
+def frontend():
+    return FileResponse(
+        "frontend/index.html"
+    )
 
 
 @app.get("/health")
