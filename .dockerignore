@@ -1,0 +1,11 @@
+venv/
+data/
+notebooks/
+reports/
+src/
+__pycache__/
+*.pyc
+*.tar
+*.zip
+.git/
+models/*stage1*
