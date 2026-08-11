@@ -5,32 +5,51 @@
 const beforeInput =
     document.getElementById("beforeImage");
 
+
 const afterInput =
     document.getElementById("afterImage");
+
 
 const predictButton =
     document.getElementById("predictButton");
 
+
+const exampleButton =
+    document.getElementById("exampleButton");
+
+
+const exampleButtonText =
+    document.getElementById("exampleButtonText");
+
+
 const buttonText =
     document.getElementById("buttonText");
+
 
 const buttonArrow =
     document.getElementById("buttonArrow");
 
+
 const spinner =
     document.getElementById("spinner");
+
 
 const resultCard =
     document.getElementById("resultCard");
 
+
 const errorBanner =
     document.getElementById("errorBanner");
+
 
 const errorText =
     document.getElementById("errorText");
 
+
 const dismissError =
     document.getElementById("dismissError");
+
+
 
 
 
@@ -74,6 +93,8 @@ const classLabels = {
 
 
 
+
+
 // =========================================================
 // ERROR HANDLING
 // =========================================================
@@ -87,14 +108,17 @@ function hideError() {
 }
 
 
+
 function showError(message) {
 
     errorText.textContent =
         message;
 
+
     errorBanner.classList.remove(
         "is-hidden"
     );
+
 
     errorBanner.scrollIntoView({
 
@@ -110,7 +134,8 @@ function showError(message) {
 
 
 
-// Hide it immediately when JS loads
+// Hide immediately when JavaScript loads
+
 hideError();
 
 
@@ -124,6 +149,8 @@ dismissError.addEventListener(
     hideError
 
 );
+
+
 
 
 
@@ -141,6 +168,7 @@ function setApiStatus(
             "apiStatus"
         );
 
+
     box.classList.remove(
         "online",
         "offline"
@@ -156,12 +184,16 @@ function setApiStatus(
     }
 
 
-    document.getElementById(
-        "apiStatusText"
-    ).textContent =
+    document
+        .getElementById(
+            "apiStatusText"
+        )
+        .textContent =
         label;
 
 }
+
+
 
 
 
@@ -216,6 +248,12 @@ async function checkApi() {
 
     catch (error) {
 
+        console.error(
+            "Health check error:",
+            error
+        );
+
+
         setApiStatus(
             "offline",
             "API offline"
@@ -227,8 +265,10 @@ async function checkApi() {
 
 
 
+
+
 // =========================================================
-// BUTTON STATE
+// PREDICTION BUTTON STATE
 // =========================================================
 
 function updateButtonState() {
@@ -237,6 +277,7 @@ function updateButtonState() {
         Boolean(
             beforeInput.files[0]
         );
+
 
     const hasAfter =
         Boolean(
@@ -252,6 +293,8 @@ function updateButtonState() {
         );
 
 }
+
+
 
 
 
@@ -305,9 +348,9 @@ function setupUploader(
 
 
 
-    function render(
-        file
-    ) {
+
+
+    function render(file) {
 
         if (!file) {
 
@@ -344,6 +387,10 @@ function setupUploader(
 
 
 
+
+
+    // Manual file selection
+
     input.addEventListener(
 
         "change",
@@ -357,6 +404,8 @@ function setupUploader(
         }
 
     );
+
+
 
 
 
@@ -377,6 +426,7 @@ function setupUploader(
 
                     event.preventDefault();
 
+
                     dropzone.classList.add(
                         "dragover"
                     );
@@ -388,6 +438,8 @@ function setupUploader(
         }
 
     );
+
+
 
 
 
@@ -406,6 +458,7 @@ function setupUploader(
 
                     event.preventDefault();
 
+
                     dropzone.classList.remove(
                         "dragover"
                     );
@@ -420,7 +473,9 @@ function setupUploader(
 
 
 
-    // Handle drag-drop file
+
+
+    // Handle drag-drop files
 
     dropzone.addEventListener(
 
@@ -430,8 +485,8 @@ function setupUploader(
 
             const file =
                 event
-                .dataTransfer
-                .files[0];
+                    .dataTransfer
+                    .files[0];
 
 
             if (!file) {
@@ -466,7 +521,9 @@ function setupUploader(
 
 
 
-// Initialize both uploaders
+
+
+// Initialize uploaders
 
 setupUploader(
     "before",
@@ -478,6 +535,196 @@ setupUploader(
     "after",
     afterInput
 );
+
+
+
+
+
+// =========================================================
+// EXAMPLE IMAGE LOADER
+// =========================================================
+
+async function loadExampleFile(
+    url,
+    filename,
+    input
+) {
+
+    const response =
+        await fetch(
+            url,
+            {
+                cache:
+                    "no-store"
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Could not load ${filename}`
+        );
+
+    }
+
+
+    const blob =
+        await response.blob();
+
+
+    const file =
+        new File(
+            [blob],
+            filename,
+            {
+                type:
+                    blob.type
+                    ||
+                    "image/jpeg"
+            }
+        );
+
+
+    const transfer =
+        new DataTransfer();
+
+
+    transfer.items.add(
+        file
+    );
+
+
+    input.files =
+        transfer.files;
+
+
+
+    // Existing uploader listens for this event.
+    // This automatically renders the preview.
+
+    input.dispatchEvent(
+
+        new Event(
+            "change",
+            {
+                bubbles:
+                    true
+            }
+        )
+
+    );
+
+}
+
+
+
+
+
+exampleButton.addEventListener(
+
+    "click",
+
+    async () => {
+
+        try {
+
+            hideError();
+
+
+            resultCard.hidden =
+                true;
+
+
+            exampleButton.disabled =
+                true;
+
+
+            exampleButtonText.textContent =
+                "Loading example...";
+
+
+
+            await loadExampleFile(
+
+                "/static/examples/before.png",
+
+                "before.png",
+
+                beforeInput
+
+            );
+
+
+
+            await loadExampleFile(
+
+                "/static/examples/after.png",
+
+                "after.png",
+
+                afterInput
+
+            );
+
+
+
+            updateButtonState();
+
+
+
+            exampleButtonText.textContent =
+                "Example loaded ✓";
+
+
+
+            setTimeout(
+
+                () => {
+
+                    exampleButton.disabled =
+                        false;
+
+
+                    exampleButtonText.textContent =
+                        "Try destroyed example";
+
+                },
+
+                1500
+
+            );
+
+        }
+
+
+        catch (error) {
+
+            console.error(
+                "Example loading error:",
+                error
+            );
+
+
+            exampleButton.disabled =
+                false;
+
+
+            exampleButtonText.textContent =
+                "Try destroyed example";
+
+
+            showError(
+                "Could not load the example images."
+            );
+
+        }
+
+    }
+
+);
+
+
 
 
 
@@ -501,6 +748,7 @@ document
 
                     event.preventDefault();
 
+
                     event.stopPropagation();
 
 
@@ -517,6 +765,8 @@ document
         }
 
     );
+
+
 
 
 
@@ -538,6 +788,10 @@ function setLoading(
         );
 
 
+    exampleButton.disabled =
+        loading;
+
+
     buttonText.textContent =
         loading
         ?
@@ -557,20 +811,16 @@ function setLoading(
 
 
 
+
+
 // =========================================================
 // RESULT RENDERING
 // =========================================================
 
-function renderResults(
-    data
-) {
+function renderResults(data) {
 
-    /*
-        VERY IMPORTANT:
 
-        Successful prediction always
-        hides any previous error.
-    */
+    // Successful prediction hides old errors
 
     hideError();
 
@@ -589,9 +839,11 @@ function renderResults(
 
 
 
-    // ===============================
-    // Severity badge
-    // ===============================
+
+
+    // =====================================================
+    // SEVERITY BADGE
+    // =====================================================
 
     const badge =
         document.getElementById(
@@ -614,9 +866,11 @@ function renderResults(
 
 
 
-    // ===============================
-    // Confidence
-    // ===============================
+
+
+    // =====================================================
+    // CONFIDENCE
+    // =====================================================
 
     document
         .getElementById(
@@ -653,9 +907,11 @@ function renderResults(
 
 
 
-    // ===============================
-    // Probability bars
-    // ===============================
+
+
+    // =====================================================
+    // PROBABILITY BARS
+    // =====================================================
 
     const probabilityList =
         document.getElementById(
@@ -690,10 +946,11 @@ function renderResults(
                 Number(
 
                     data
-                    .probabilities
-                    ?.[label]
+                        .probabilities
+                        ?.[label]
 
                     ||
+
                     0
 
                 );
@@ -750,6 +1007,8 @@ function renderResults(
 
 
 
+
+
     // Animate probability bars
 
     requestAnimationFrame(
@@ -779,9 +1038,11 @@ function renderResults(
 
 
 
-    // ===============================
-    // Assessment explanation
-    // ===============================
+
+
+    // =====================================================
+    // ASSESSMENT NOTE
+    // =====================================================
 
     document
         .getElementById(
@@ -799,13 +1060,14 @@ function renderResults(
 
 
 
-    // ===============================
-    // Display result
-    // ===============================
+
+
+    // =====================================================
+    // DISPLAY RESULT
+    // =====================================================
 
     resultCard.hidden =
         false;
-
 
 
     resultCard.scrollIntoView({
@@ -819,6 +1081,8 @@ function renderResults(
     });
 
 }
+
+
 
 
 
@@ -842,7 +1106,9 @@ predictButton.addEventListener(
 
 
 
-        // Ensure both images exist
+
+
+        // Make sure both images exist
 
         if (
             !beforeFile
@@ -854,16 +1120,14 @@ predictButton.addEventListener(
                 "Please select both the before and after images."
             );
 
+
             return;
 
         }
 
 
 
-        /*
-            Clear old error BEFORE
-            starting a new prediction.
-        */
+
 
         hideError();
 
@@ -874,15 +1138,16 @@ predictButton.addEventListener(
 
 
 
+
+
         const formData =
             new FormData();
 
 
 
-        /*
-            These names MUST match
-            FastAPI exactly.
-        */
+
+
+        // Names must match FastAPI parameters
 
         formData.append(
 
@@ -900,6 +1165,8 @@ predictButton.addEventListener(
             afterFile
 
         );
+
+
 
 
 
@@ -925,6 +1192,8 @@ predictButton.addEventListener(
 
 
 
+
+
             let data = {};
 
 
@@ -940,6 +1209,8 @@ predictButton.addEventListener(
                 data = {};
 
             }
+
+
 
 
 
@@ -961,12 +1232,7 @@ predictButton.addEventListener(
 
 
 
-            /*
-                Prediction succeeded.
 
-                renderResults()
-                also calls hideError().
-            */
 
             renderResults(
                 data
@@ -976,10 +1242,13 @@ predictButton.addEventListener(
 
 
 
+
+
         catch (error) {
 
 
             console.error(
+                "Prediction error:",
                 error
             );
 
@@ -998,6 +1267,8 @@ predictButton.addEventListener(
 
 
 
+
+
         finally {
 
 
@@ -1007,9 +1278,12 @@ predictButton.addEventListener(
 
         }
 
+
     }
 
 );
+
+
 
 
 

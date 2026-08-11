@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -18,11 +19,12 @@
         DisasterDiff | Building Damage Assessment
     </title>
 
-    <!-- v=3 prevents browser from using old cached CSS -->
+    <!-- Cache busting -->
     <link
         rel="stylesheet"
-        href="/static/styles.css?v=3"
+        href="/static/styles.css?v=4"
     >
+
 </head>
 
 
@@ -30,16 +32,21 @@
 
     <div class="page-shell">
 
+
         <!-- Ambient background glow -->
+
         <div class="ambient ambient-a"></div>
+
         <div class="ambient ambient-b"></div>
 
 
-        <!-- ============================
+
+        <!-- =========================================
              NAVBAR
-        ============================= -->
+        ========================================== -->
 
         <header class="topbar">
+
 
             <a
                 class="brand"
@@ -49,6 +56,7 @@
                 <div class="brand-mark">
                     DD
                 </div>
+
 
                 <div>
 
@@ -65,7 +73,9 @@
             </a>
 
 
+
             <div class="topbar-actions">
+
 
                 <div
                     class="api-status"
@@ -81,6 +91,7 @@
                 </div>
 
 
+
                 <a
                     class="ghost-link"
                     href="/docs"
@@ -89,20 +100,24 @@
                     API Docs
                 </a>
 
+
             </div>
 
+
         </header>
+
 
 
 
         <main>
 
 
-            <!-- ============================
+            <!-- =========================================
                  HERO
-            ============================= -->
+            ========================================== -->
 
             <section class="hero">
+
 
                 <div class="eyebrow">
 
@@ -111,6 +126,7 @@
                     Explainable deep learning for disaster response
 
                 </div>
+
 
 
                 <h1>
@@ -127,6 +143,7 @@
                 </h1>
 
 
+
                 <p class="hero-copy">
 
                     Upload paired satellite crops of the same building.
@@ -134,6 +151,7 @@
                     damage severity across four classes.
 
                 </p>
+
 
 
                 <div class="hero-meta">
@@ -152,18 +170,22 @@
 
                 </div>
 
+
             </section>
 
 
 
-            <!-- ============================
+
+
+            <!-- =========================================
                  UPLOAD WORKSPACE
-            ============================= -->
+            ========================================== -->
 
             <section class="workspace-card">
 
 
                 <div class="workspace-heading">
+
 
                     <div>
 
@@ -183,26 +205,34 @@
                     </div>
 
 
+
                     <div class="pair-badge">
                         Matched pair
                     </div>
 
+
                 </div>
+
 
 
 
                 <div class="upload-grid">
 
 
-                    <!-- BEFORE IMAGE -->
+                    <!-- =========================================
+                         BEFORE IMAGE
+                    ========================================== -->
 
                     <article class="upload-panel">
 
+
                         <div class="panel-label-row">
+
 
                             <span class="step-number">
                                 01
                             </span>
+
 
                             <div>
 
@@ -216,7 +246,9 @@
 
                             </div>
 
+
                         </div>
+
 
 
                         <label
@@ -225,12 +257,14 @@
                             for="beforeImage"
                         >
 
+
                             <input
                                 id="beforeImage"
                                 type="file"
                                 accept="image/jpeg,image/png,image/jpg"
                                 hidden
                             >
+
 
 
                             <div
@@ -253,6 +287,7 @@
                             </div>
 
 
+
                             <div
                                 class="preview-wrap"
                                 id="beforePreviewWrap"
@@ -263,6 +298,7 @@
                                     id="beforePreview"
                                     alt="Before disaster image"
                                 >
+
 
                                 <div class="preview-overlay">
 
@@ -278,23 +314,33 @@
 
                                 </div>
 
+
                             </div>
 
+
                         </label>
+
 
                     </article>
 
 
 
-                    <!-- AFTER IMAGE -->
+
+
+                    <!-- =========================================
+                         AFTER IMAGE
+                    ========================================== -->
 
                     <article class="upload-panel">
 
+
                         <div class="panel-label-row">
+
 
                             <span class="step-number">
                                 02
                             </span>
+
 
                             <div>
 
@@ -308,7 +354,9 @@
 
                             </div>
 
+
                         </div>
+
 
 
                         <label
@@ -317,12 +365,14 @@
                             for="afterImage"
                         >
 
+
                             <input
                                 id="afterImage"
                                 type="file"
                                 accept="image/jpeg,image/png,image/jpg"
                                 hidden
                             >
+
 
 
                             <div
@@ -345,6 +395,7 @@
                             </div>
 
 
+
                             <div
                                 class="preview-wrap"
                                 id="afterPreviewWrap"
@@ -355,6 +406,7 @@
                                     id="afterPreview"
                                     alt="After disaster image"
                                 >
+
 
                                 <div class="preview-overlay">
 
@@ -370,19 +422,27 @@
 
                                 </div>
 
+
                             </div>
+
 
                         </label>
 
+
                     </article>
+
 
                 </div>
 
 
 
-                <!-- ACTION BUTTON -->
+
+                <!-- =========================================
+                     ACTION BUTTONS
+                ========================================== -->
 
                 <div class="action-row">
+
 
                     <div class="input-hint">
 
@@ -391,6 +451,29 @@
 
                     </div>
 
+
+
+                    <!-- Example loader -->
+
+                    <button
+                        class="primary-button"
+                        id="exampleButton"
+                        type="button"
+                    >
+
+                        <span id="exampleButtonText">
+                            Try destroyed example
+                        </span>
+
+                        <span class="button-arrow">
+                            ↗
+                        </span>
+
+                    </button>
+
+
+
+                    <!-- Prediction button -->
 
                     <button
                         class="primary-button"
@@ -403,12 +486,14 @@
                             Analyze damage
                         </span>
 
+
                         <span
                             id="buttonArrow"
                             class="button-arrow"
                         >
                             →
                         </span>
+
 
                         <span
                             class="spinner"
@@ -417,23 +502,24 @@
                         >
                         </span>
 
+
                     </button>
+
 
                 </div>
 
 
 
-                <!-- ============================
-                     ERROR BOX
 
-                     IMPORTANT:
-                     starts with is-hidden
-                ============================= -->
+                <!-- =========================================
+                     ERROR BOX
+                ========================================== -->
 
                 <div
                     class="error-banner is-hidden"
                     id="errorBanner"
                 >
+
 
                     <div>
 
@@ -448,12 +534,14 @@
                     </div>
 
 
+
                     <button
                         type="button"
                         id="dismissError"
                     >
                         Dismiss
                     </button>
+
 
                 </div>
 
@@ -462,9 +550,11 @@
 
 
 
-            <!-- ============================
+
+
+            <!-- =========================================
                  RESULT SECTION
-            ============================= -->
+            ========================================== -->
 
             <section
                 class="result-card"
@@ -478,16 +568,20 @@
 
                     <div>
 
+
                         <p class="section-kicker">
                             MODEL OUTPUT
                         </p>
 
 
+
                         <div class="result-title-row">
+
 
                             <h2>
                                 Damage assessment
                             </h2>
+
 
                             <span
                                 class="severity-badge"
@@ -496,7 +590,9 @@
                                 No damage
                             </span>
 
+
                         </div>
+
 
 
                         <p class="result-subtitle">
@@ -506,7 +602,9 @@
 
                         </p>
 
+
                     </div>
+
 
 
 
@@ -515,6 +613,7 @@
                         id="confidenceRing"
                         style="--score: 0;"
                     >
+
 
                         <div class="confidence-inner">
 
@@ -528,9 +627,12 @@
 
                         </div>
 
+
                     </div>
 
+
                 </div>
+
 
 
 
@@ -540,6 +642,7 @@
                     <!-- Probability panel -->
 
                     <div class="probability-panel">
+
 
                         <div class="panel-heading">
 
@@ -554,17 +657,20 @@
                         </div>
 
 
+
                         <div
                             id="probabilityList"
                             class="probability-list"
                         >
                         </div>
 
+
                     </div>
 
 
 
-                    <!-- Explanation panel -->
+
+                    <!-- Interpretation panel -->
 
                     <div class="interpretation-panel">
 
@@ -582,6 +688,7 @@
                         </div>
 
 
+
                         <div
                             class="assessment-note"
                             id="assessmentNote"
@@ -589,11 +696,14 @@
                         </div>
 
 
+
                         <div class="model-note">
+
 
                             <div class="model-note-icon">
                                 AI
                             </div>
+
 
                             <div>
 
@@ -609,20 +719,137 @@
 
                             </div>
 
+
                         </div>
+
 
                     </div>
 
 
                 </div>
 
+
             </section>
 
 
 
-            <!-- ============================
+
+
+            <!-- =========================================
+                 MODEL INFORMATION
+            ========================================== -->
+
+            <section class="how-it-works">
+
+
+                <div class="section-header">
+
+                    <p class="section-kicker">
+                        MODEL INFORMATION
+                    </p>
+
+                    <h2>
+                        About the model
+                    </h2>
+
+                </div>
+
+
+
+
+                <div class="pipeline-grid">
+
+
+                    <article>
+
+                        <span>
+                            01
+                        </span>
+
+                        <h3>
+                            Siamese ResNet18
+                        </h3>
+
+                        <p>
+                            Shared-weight convolutional backbone
+                            compares the pre- and post-disaster images.
+                        </p>
+
+                    </article>
+
+
+
+
+                    <article>
+
+                        <span>
+                            02
+                        </span>
+
+                        <h3>
+                            xBD / xView2
+                        </h3>
+
+                        <p>
+                            Trained using paired satellite imagery
+                            from multiple disaster events.
+                        </p>
+
+                    </article>
+
+
+
+
+                    <article>
+
+                        <span>
+                            03
+                        </span>
+
+                        <h3>
+                            Macro F1: 67.77%
+                        </h3>
+
+                        <p>
+                            Macro F1 is the primary metric because
+                            the four damage classes are imbalanced.
+                        </p>
+
+                    </article>
+
+
+
+
+                    <article>
+
+                        <span>
+                            04
+                        </span>
+
+                        <h3>
+                            Grad-CAM
+                        </h3>
+
+                        <p>
+                            Activation maps help inspect which
+                            image regions influence predictions.
+                        </p>
+
+                    </article>
+
+
+                </div>
+
+
+            </section>
+
+
+
+
+
+            <!-- =========================================
                  PIPELINE
-            ============================= -->
+            ========================================== -->
 
             <section class="how-it-works">
 
@@ -638,6 +865,7 @@
                     </h2>
 
                 </div>
+
 
 
 
@@ -662,6 +890,8 @@
                     </article>
 
 
+
+
                     <article>
 
                         <span>
@@ -680,6 +910,8 @@
                     </article>
 
 
+
+
                     <article>
 
                         <span>
@@ -696,6 +928,8 @@
                         </p>
 
                     </article>
+
+
 
 
                     <article>
@@ -718,6 +952,7 @@
 
                 </div>
 
+
             </section>
 
 
@@ -725,11 +960,14 @@
 
 
 
-        <!-- ============================
+
+
+        <!-- =========================================
              FOOTER
-        ============================= -->
+        ========================================== -->
 
         <footer>
+
 
             <div>
 
@@ -744,9 +982,11 @@
             </div>
 
 
+
             <span>
                 Research prototype · Not a substitute for field inspection
             </span>
+
 
         </footer>
 
@@ -754,8 +994,11 @@
     </div>
 
 
-    <!-- v=3 prevents browser from using old cached JavaScript -->
-    <script src="/static/app.js?v=3"></script>
+
+    <!-- Cache busting -->
+
+    <script src="/static/app.js?v=4"></script>
+
 
 </body>
 
